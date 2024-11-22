@@ -61,25 +61,25 @@ class MainViewController: UIViewController {
         CalculatorButtonComponent(title: "7", type: .number),
         CalculatorButtonComponent(title: "8", type: .number),
         CalculatorButtonComponent(title: "9", type: .number),
-        CalculatorButtonComponent(title: "+", type: .mathSymbol),
+        CalculatorButtonComponent(title: "+", type: .add),
     ])
     let buttonsRowStackView2: UIStackView = makeHorizontalStackView([
         CalculatorButtonComponent(title: "4", type: .number),
         CalculatorButtonComponent(title: "5", type: .number),
         CalculatorButtonComponent(title: "6", type: .number),
-        CalculatorButtonComponent(title: "-", type: .mathSymbol),
+        CalculatorButtonComponent(title: "-", type: .subtract),
     ])
     let buttonsRowStackView3: UIStackView = makeHorizontalStackView([
         CalculatorButtonComponent(title: "1", type: .number),
         CalculatorButtonComponent(title: "2", type: .number),
         CalculatorButtonComponent(title: "3", type: .number),
-        CalculatorButtonComponent(title: "*", type: .mathSymbol),
+        CalculatorButtonComponent(title: "*", type: .multiply),
     ])
     let buttonsRowStackView4: UIStackView = makeHorizontalStackView([
         CalculatorButtonComponent(title: "AC", type: .clear),
         CalculatorButtonComponent(title: "0", type: .number),
         CalculatorButtonComponent(title: "=", type: .calculate),
-        CalculatorButtonComponent(title: "/", type: .mathSymbol),
+        CalculatorButtonComponent(title: "/", type: .divide),
     ])
     
     
@@ -165,12 +165,12 @@ class MainViewController: UIViewController {
     /// - Parameter sender: 버튼 하나하나가 객체이며, 해당 객체의 버튼타입(enum)에 따라 기능을 수행하기 위해 객체를 파라미터로 삽입
     @objc private func buttonTapped(_ sender: CalculatorButtonComponent) {
         switch sender.calButtonType {
-        case .number, .mathSymbol:
+        case .number, .add, .subtract, .multiply, .divide:
             calculator.addToDisplay(sender.title, sender.calButtonType)
         case .clear:
             calculator.clear()
         case .calculate:
-            return
+            calculator.calculateAll()
         }
         
         // Update display
@@ -181,6 +181,7 @@ class MainViewController: UIViewController {
 
 }
 
-#Preview {
-    MainViewController()
-}
+//
+//#Preview {
+//    MainViewController()
+//}

@@ -8,6 +8,11 @@
 import Foundation
 
 struct Task {
-    var taskArray: [String] = []
+    var calculation: String = ""
     var result: String = ""
+    
+    init(_ calculation: String, _ result: String) {
+        self.calculation = calculation
+        self.result = result
+    }
 }

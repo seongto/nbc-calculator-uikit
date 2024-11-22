@@ -7,6 +7,8 @@
 
 import UIKit
 
+
+/// 코드의 보수와 관리의 편의성을 위해 각종 색상과 수치 등을 미리 정의.
 struct ThemeManager {
     static let shared = ThemeManager()
 

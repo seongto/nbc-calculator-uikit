@@ -10,14 +10,14 @@ import SnapKit
 import OSLog
 
 
+/// 버튼의 한 행을 스택뷰로 만들기
 func makeHorizontalStackView(_ buttons: [CalculatorButtonComponent]) -> UIStackView {
     let stackView = UIStackView()
-    let theme = ThemeManager.shared
     
     stackView.axis = .horizontal
     stackView.spacing = 10
     stackView.distribution = .fillEqually
-    stackView.backgroundColor = theme.colors.black
+    stackView.backgroundColor = ThemeManager.shared.colors.black
         
     buttons.forEach { stackView.addArrangedSubview($0) }
     
@@ -29,6 +29,7 @@ func makeHorizontalStackView(_ buttons: [CalculatorButtonComponent]) -> UIStackV
     
 }
 
+/// 현재 입력한 수식 및 결과값을 보여주는 레이블
 func makeDisplayLabel(_ text: String) -> UILabel {
     let label = UILabel()
     let theme = ThemeManager.shared
@@ -38,6 +39,8 @@ func makeDisplayLabel(_ text: String) -> UILabel {
     label.textColor = theme.colors.white
     label.textAlignment = .right
     label.font = theme.fonts.h1
+    label.adjustsFontSizeToFitWidth = true // 원하는 대로 작동하지 않는 코드...
+    label.minimumScaleFactor = 0.5
     
     label.snp.makeConstraints {
         $0.height.equalTo(100)
@@ -46,6 +49,7 @@ func makeDisplayLabel(_ text: String) -> UILabel {
     return label
 }
 
+/// 이전 계산된 수식과 에러 메시지 등을 보여주는 레이블
 func makeHistoryLabel() -> UILabel {
     let label = UILabel()
     let theme = ThemeManager.shared
@@ -63,6 +67,7 @@ func makeHistoryLabel() -> UILabel {
     return label
 }
 
+/// label의 스크롤을 위한 스크롤뷰
 func makeHorizontalScrollView() -> UIScrollView{
     let scrollView = UIScrollView()
     scrollView.showsHorizontalScrollIndicator = false
@@ -70,7 +75,7 @@ func makeHorizontalScrollView() -> UIScrollView{
     return scrollView
 }
 
-
+/// 메인 UI 컴포넌트 배치 및 기본 작동 기능 구현
 class MainViewController: UIViewController {
     
     private let theme = ThemeManager.shared // 전역 데이터 관리를 위한 앱델리게이트 가져오기
@@ -88,6 +93,7 @@ class MainViewController: UIViewController {
     
     let buttonsStackView = UIStackView() // 각 계산기 버튼 row 스택뷰들을 모아서 담는 스택뷰
     
+    // 각 행에 접근할 경우를 대비해 각각을 따로 변수로 만들어서 사용.
     let buttonsRowStackView1: UIStackView = makeHorizontalStackView([
         CalculatorButtonComponent(title: "7", type: .number),
         CalculatorButtonComponent(title: "8", type: .number),
@@ -110,7 +116,7 @@ class MainViewController: UIViewController {
         CalculatorButtonComponent(title: "AC", type: .clear),
         CalculatorButtonComponent(title: "0", type: .number),
         CalculatorButtonComponent(title: "=", type: .calculate),
-        CalculatorButtonComponent(title: "/", type: .divide),
+        CalculatorButtonComponent(title: "÷", type: .divide),
     ])
     
     
@@ -150,7 +156,12 @@ class MainViewController: UIViewController {
         buttonsStackView.backgroundColor = theme.colors.black
         buttonsStackView.spacing = 10
         buttonsStackView.distribution = .fillEqually
-                
+        
+        // 각 UI의 레이어 구조는 아래와 같다.
+        // buttonsRowStackView -> buttonsStackView -> mainWrapper -> view
+        // displayLabel -> displayScrollView -> mainWrapper
+        // historyLabel -> historyScrollView -> mainWrapper
+        
         displayScrollView.addSubview(displayLabel)
         mainWrapper.addSubview(displayScrollView)
         
@@ -159,6 +170,8 @@ class MainViewController: UIViewController {
         
         mainWrapper.addSubview(buttonsStackView)
         view.addSubview(mainWrapper)
+        
+        
         
         mainWrapper.snp.makeConstraints {
             $0.top.equalToSuperview().inset(60)
@@ -217,6 +230,9 @@ class MainViewController: UIViewController {
         }
     }
     
+    
+    /// 스크롤뷰에서 하위 레이블 컨텐츠의 길이가 추가될 때마다 offset을 가장 trail쪽으로 옮기는 기능
+    /// - Parameter scrollView: 작동시키고자 하는 horizontal 스크롤뷰
     private func scrollToRight(_ scrollView: UIScrollView) {
         // 내부의 컨텐츠 사이즈가 스크롤 뷰의 사이즈보다 작으면 이동없도록 처리.
         //
@@ -251,11 +267,12 @@ class MainViewController: UIViewController {
             }
         }
         
-        // Update display
+        // 렌더링 파트. 버튼 클릭 후 변경되는 값 또는 수식을 label을 통해 화면에 그려준다.
         var tempDisplay: String = ""
         calculator.currentDisplay.forEach { tempDisplay += " \($0.0)"}
         displayLabel.text = tempDisplay
         
+        // 스크롤뷰 이동의 경우 동기화하지 않으면 원하는 거리만큼 이동하지 않으므로 아래와 같이 코드 작성.
         DispatchQueue.main.async {
             self.scrollToRight(self.displayScrollView)
         }
@@ -263,7 +280,7 @@ class MainViewController: UIViewController {
 
 }
 
-//
-//#Preview {
-//    MainViewController()
-//}
+
+#Preview {
+    MainViewController()
+}

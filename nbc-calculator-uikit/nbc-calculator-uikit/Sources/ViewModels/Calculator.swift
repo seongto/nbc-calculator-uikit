@@ -8,12 +8,14 @@
 import UIKit
 import OSLog
 
+
+/// 계산기앱의 핵심 로직과 계산 및 출력을 담당하는 뷰모델
 struct Calculator {
     
     // 계산기에 항상 계산된 결과값을 저장. 현재 숫자의 의미
     var currentDisplay: [(String, CalButtonTypes)]
-    var history: [Task]
-    var isResultDisplay: Bool // 결과값 초기화 용.
+    var history: [Task]         // 이전에 완료된 계산들을 기록으로 저장.
+    var isResultDisplay: Bool   // 결과값 초기화 용.
     
     init() {
         self.currentDisplay = []
@@ -31,7 +33,8 @@ struct Calculator {
             currentDisplay.append((str, type))
             return
         }
-                
+              
+        // 수식의 타입에 따른 새롭게 입력된 값에 대해 다르게 분기처리.
         switch type {
         case .number:
             if last.1 == .number {
@@ -75,6 +78,7 @@ struct Calculator {
     }
     
     
+    /// 현재 주어진 수식을 계산하여 그에 따라 결과처리 메소드를 호출.
     mutating func calculateAll() {
         // 입력 데이터가 비정상이거나 아무것도 없을 경우 현재 디스플레이를 초기화.
         guard var arr = validateDisplay() else {
@@ -95,7 +99,6 @@ struct Calculator {
                 break
             }
             
-
             if arr[idx].1 == .multiply {
                 // 너무 크거나 작은수로 인한 크래시에 대한 예외처리
                 // 유효성 검사에서도 한번 거르지만 곱하기 결과에 따라 추가적으로 발생할 수 있으므로 한번 더 검사
@@ -105,6 +108,7 @@ struct Calculator {
                     return
                 }
                 
+                // 유효한 값에 대해 곱하기 수행.
                 let tempResult: Int = MultiplyOperation().operationNumber(Int(arr[idx - 1].0)!, Int(arr[idx + 1].0)!)
                 
                 arr[idx] = (String(tempResult), .number)
@@ -113,11 +117,13 @@ struct Calculator {
                                 
             } else if arr[idx].1 == .divide {
                 
+                // 유효성 검사에서 거르지 못한 0을 다시 한번 체크.
                 guard Int(arr[idx + 1].0) != 0 else {
                     self.clear()
                     return
                 }
                 
+                // 유효한 값에 대해 나누기 수행
                 let tempResult: Int = DivideOperation().operationNumber(Int(arr[idx - 1].0)!, Int(arr[idx + 1].0)!)
                 
                 arr[idx] = (String(tempResult), .number)
@@ -162,6 +168,9 @@ struct Calculator {
         
     }
     
+    
+    /// 수식이 제대로 수행되었을 경우 그 결과를 저장하고, 디스플레이를 초기화한 후 결과값만 남긴다.
+    /// - Parameter result: 수식 계산이 완료된 최종 값
     mutating func saveResult(_ result: Int) {
         // 이전 기록 조회 및 마지막 계산식을 hitoryLabel에 띄워주기 위해 해당 기록을 저장.
         history.append( Task(currentDisplay.map{ $0.0 }.joined(separator: " "), String(result)) )
@@ -170,6 +179,9 @@ struct Calculator {
         isResultDisplay = true // 결과 출력 후 숫자를 입력할 경우 현재 결과를 사용하지 않고 초기화하기 위함.
     }
     
+    /// 수식이 완료되지 않는 경우 그 상황을 저장하여 label에 출력.
+    /// 수식이 제대로 수행되지 않아 예외처리해야하는 상황 중 사용자에게 이를 알려야 하는 경우 사용.
+    /// - Parameter msg: 사용자에게 노출하고자 하는 텍스트
     mutating func saveBadLog(_ msg: String) {
         history.append( Task(msg, "error") )
         currentDisplay.removeAll()
@@ -177,6 +189,8 @@ struct Calculator {
         isResultDisplay = true
     }
     
+    /// 주어진 수식에 대한 계산 전 수식의 각 값들에 대해 유효성 검사.
+    /// - Returns: 수식의 마지막이 연산기호일 경우 이를 제거한 값을 반환.
     mutating func validateDisplay() -> [(String, CalButtonTypes)]? {
         // 아무값이 없을 경우 검증 단계 스킵.
         if currentDisplay.isEmpty {
@@ -214,6 +228,7 @@ struct Calculator {
             }
             
             // 너무 크거나 작은 숫자 있으면 초기화하기
+            // 10억 이상의 숫자 안받아요. 음수는 1억 이상 계산 불가.
             if arr[i].0.count > 9 {
                 os_log(.debug, "숫자가 너무 크거나 작습니다.")
                 saveBadLog("숫자가 너무 크거나 작아요. 다시 시작해주세요.")

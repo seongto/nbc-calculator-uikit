@@ -8,7 +8,7 @@
 import SnapKit
 import UIKit
 
-/// 버튼은 클래스로 만들어서 재사용하는 것을 시도
+/// 버튼은 클래스로 만들어서 재사용하는 것을 시도해 보았다.
 class CalculatorButtonComponent: UIButton {
     var calButtonType: CalButtonTypes = .number
     var title: String = ""

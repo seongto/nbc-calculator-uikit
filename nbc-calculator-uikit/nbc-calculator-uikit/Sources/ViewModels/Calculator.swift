@@ -13,10 +13,12 @@ struct Calculator {
     // 계산기에 항상 계산된 결과값을 저장. 현재 숫자의 의미
     var currentDisplay: [(String, CalButtonTypes)]
     var history: [Task]
+    var isResultDisplay: Bool // 결과값 초기화 용.
     
     init() {
         self.currentDisplay = []
         self.history = []
+        self.isResultDisplay = false
     }
     
     
@@ -29,9 +31,11 @@ struct Calculator {
         switch type {
         case .number:
             if last.1 == .number {
-                if last.0 == "0" {
+                // 이전 숫자가 0일 경우 이를 초기화한 후 숫자입력, 그 외의 숫자일 경우 숫자에 결합.
+                if last.0 == "0" || isResultDisplay { // 0으로 시작 방지 및 결과출력 직후 숫자 누를 경우 현재 값 초기화
                     currentDisplay.removeLast()
                     currentDisplay.append((str, type))
+                    isResultDisplay = false
                 } else {
                     let lastNum: String = last.0
                     currentDisplay.removeLast()
@@ -111,8 +115,6 @@ struct Calculator {
         }
         
         
-        
-        
         // 최종 계산 결과를 담는 sum. 로직 실패로 첫 수가 숫자가 아닐 경우 초기화.
         guard var sum: Int = Int(arr[0].0) else {
             os_log(.debug, "\(arr)")
@@ -144,10 +146,11 @@ struct Calculator {
     }
     
     mutating func saveResult(_ result: Int) {
-        // 이전 기록 조회 및 마지막 계산식을 결과값보다 위에 띄워주기
+        // 이전 기록 조회 및 마지막 계산식을 hitoryLabel에 띄워주기 위해 해당 기록을 저장.
         history.append( Task(currentDisplay.map{ $0.0 }.joined(separator: " "), String(result)) )
         currentDisplay.removeAll()
         currentDisplay.append((String(result), .number)) // 마지막 결과값 남기기
+        isResultDisplay = true // 결과 출력 후 숫자를 입력할 경우 현재 결과를 사용하지 않고 초기화하기 위함.
     }
     
     mutating func validateDisplay() -> [(String, CalButtonTypes)]? {

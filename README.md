@@ -1,4 +1,4 @@
-# iOS_week2_calculator_UIKit
+# iOS_week5_calculator_UIKit
 
 ![계산기 만들기](https://help.apple.com/assets/65D6896CA6CCCD9ECD051E60/65D6896D44E24248E80D32D1/ko_KR/5250122ee560cee90b3d7cfa2d91695e.png)
 

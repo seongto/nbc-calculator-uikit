@@ -29,7 +29,6 @@ func makeHorizontalStackView(_ buttons: [CalculatorButtonComponent]) -> UIStackV
     
 }
 
-
 func makeDisplayLabel(_ text: String) -> UILabel {
     let label = UILabel()
     let theme = ThemeManager.shared
@@ -47,6 +46,30 @@ func makeDisplayLabel(_ text: String) -> UILabel {
     return label
 }
 
+func makeHistoryLabel() -> UILabel {
+    let label = UILabel()
+    let theme = ThemeManager.shared
+    
+    label.text = ""
+    label.backgroundColor = theme.colors.black
+    label.textColor = theme.colors.grey2
+    label.textAlignment = .right
+    label.font = theme.fonts.h4
+    
+    label.snp.makeConstraints {
+        $0.height.equalTo(40)
+    }
+    
+    return label
+}
+
+func makeHorizontalScrollView() -> UIScrollView{
+    let scrollView = UIScrollView()
+    scrollView.showsHorizontalScrollIndicator = false
+    
+    return scrollView
+}
+
 
 class MainViewController: UIViewController {
     
@@ -54,7 +77,15 @@ class MainViewController: UIViewController {
     private var calculator: Calculator // 계산기 뷰모델 : 각종 로직 담당
     
     let mainWrapper = UIView()
+    // 현재 계산 중인 수식 및 그 결과를 보여주는 레이어
     let displayLabel = makeDisplayLabel("0")
+    let displayScrollView = makeHorizontalScrollView()
+    
+    // 현재 계산 중인 수식 및 그 결과를 보여주는 레이어
+    let historyLabel = makeHistoryLabel()
+    let historyScrollView = makeHorizontalScrollView()
+    
+    
     let buttonsStackView = UIStackView() // 각 계산기 버튼 row 스택뷰들을 모아서 담는 스택뷰
     
     let buttonsRowStackView1: UIStackView = makeHorizontalStackView([
@@ -73,7 +104,7 @@ class MainViewController: UIViewController {
         CalculatorButtonComponent(title: "1", type: .number),
         CalculatorButtonComponent(title: "2", type: .number),
         CalculatorButtonComponent(title: "3", type: .number),
-        CalculatorButtonComponent(title: "*", type: .multiply),
+        CalculatorButtonComponent(title: "x", type: .multiply),
     ])
     let buttonsRowStackView4: UIStackView = makeHorizontalStackView([
         CalculatorButtonComponent(title: "AC", type: .clear),
@@ -120,8 +151,13 @@ class MainViewController: UIViewController {
         buttonsStackView.spacing = 10
         buttonsStackView.distribution = .fillEqually
                 
+        displayScrollView.addSubview(displayLabel)
+        mainWrapper.addSubview(displayScrollView)
+        
+        historyScrollView.addSubview(historyLabel)
+        mainWrapper.addSubview(historyScrollView)
+        
         mainWrapper.addSubview(buttonsStackView)
-        mainWrapper.addSubview(displayLabel)
         view.addSubview(mainWrapper)
         
         mainWrapper.snp.makeConstraints {
@@ -131,17 +167,39 @@ class MainViewController: UIViewController {
             $0.trailing.equalToSuperview().inset(30)
         }
         
+        historyLabel.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+            $0.height.equalToSuperview()
+            $0.width.greaterThanOrEqualToSuperview()
+        }
+        
+        historyScrollView.snp.makeConstraints {
+            $0.leading.equalTo(view)
+            $0.trailing.equalToSuperview()
+            $0.top.equalToSuperview().inset(100)
+            $0.height.equalTo(40)
+        }
+        
         displayLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview()
+            $0.edges.equalToSuperview()
+            $0.height.equalToSuperview()
+            $0.width.greaterThanOrEqualToSuperview()
+        }
+        
+        displayScrollView.snp.makeConstraints {
+            $0.leading.equalTo(view)
             $0.trailing.equalToSuperview()
             $0.top.equalToSuperview().inset(140)
+            $0.height.equalTo(100)
         }
         
         buttonsStackView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(0)
             $0.trailing.equalToSuperview().inset(0)
-            $0.top.equalTo(displayLabel.snp.bottom).offset(60)
+            $0.top.equalTo(displayScrollView.snp.bottom).offset(60)
         }
+        
+        
     }
     
     /// 생성된 버튼 들에 액션을 추가하기
@@ -159,6 +217,17 @@ class MainViewController: UIViewController {
         }
     }
     
+    private func scrollToRight(_ scrollView: UIScrollView) {
+        // 내부의 컨텐츠 사이즈가 스크롤 뷰의 사이즈보다 작으면 이동없도록 처리.
+        //
+        let offsetX = scrollView.contentSize.width - scrollView.bounds.width
+        guard offsetX > 0 else {
+            return
+        }
+        
+        scrollView.setContentOffset(CGPoint(x: offsetX, y: 0), animated: false)
+    }
+    
     
     /// 각 버튼 객체의 버튼 타입에 따라 서로 다른 기능을 수행하는 메소드.
     /// 각 버튼에 addTarget 으로 연결
@@ -166,17 +235,30 @@ class MainViewController: UIViewController {
     @objc private func buttonTapped(_ sender: CalculatorButtonComponent) {
         switch sender.calButtonType {
         case .number, .add, .subtract, .multiply, .divide:
+            // 새로운 입력을 시작할 경우 히스토리 라벨 비우기
+            if historyLabel.text != "" {
+                historyLabel.text = ""
+            }
+            
             calculator.addToDisplay(sender.title, sender.calButtonType)
         case .clear:
             calculator.clear()
         case .calculate:
             calculator.calculateAll()
+            historyLabel.text = calculator.history.last?.calculation
+            DispatchQueue.main.async {
+                self.scrollToRight(self.historyScrollView)
+            }
         }
         
         // Update display
         var tempDisplay: String = ""
-        calculator.currentDisplay.forEach { tempDisplay += $0.0}
+        calculator.currentDisplay.forEach { tempDisplay += " \($0.0)"}
         displayLabel.text = tempDisplay
+        
+        DispatchQueue.main.async {
+            self.scrollToRight(self.displayScrollView)
+        }
     }
 
 }

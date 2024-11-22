@@ -8,50 +8,39 @@
 import SnapKit
 import UIKit
 
-
+/// 버튼은 클래스로 만들어서 재사용하는 것을 시도
 class CalculatorButtonComponent: UIButton {
-    private var customAction : (() -> Void)?
-    private var calButtonType: CalButtonTypes? = nil
-    
-    private let theme = ThemeManager.shared
-    
+    var calButtonType: CalButtonTypes = .number
+    var title: String = ""
+    private let buttonSize: CGFloat = 80
+        
     override init(frame: CGRect) {
         super.init(frame: frame)
     }
     
-    init( buttonInfo: CalButton ) {
+    init( title: String, type: CalButtonTypes ) {
         super.init(frame: .zero)
+        self.calButtonType = type
+        self.title = title
         
-        self.customAction = buttonInfo.action
-        self.calButtonType = buttonInfo.type
-        
-        setTitle(buttonInfo.title, for: .normal)
-        titleLabel?.font = theme.fonts.h3
-        backgroundColor = theme.colors.calButton
-        setTitleColor(theme.colors.white, for: .normal) // 타이틀 컬러 설정
-        layer.cornerRadius = 40 // 테두리 곡률 설정
-        
-        if calButtonType == .number {
-            backgroundColor = theme.colors.calButton
-        } else {
-            backgroundColor = theme.colors.orange
-        }
-        
-        snp.makeConstraints {
-            $0.height.equalTo(80)
-            $0.width.equalTo(80)
-        }
+        configureUI()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    @objc func buttonTapped() {
-        if customAction != nil {
-            
+    private func configureUI() {
+        backgroundColor = calButtonType == .number ? ThemeManager.shared.colors.calButton : ThemeManager.shared.colors.orange
+        setTitle(title, for: .normal)
+        titleLabel?.font = ThemeManager.shared.fonts.h3
+        setTitleColor(ThemeManager.shared.colors.white, for: .normal) // 타이틀 컬러 설정
+        layer.cornerRadius = buttonSize / 2 // 테두리 곡률 설정
+                
+        snp.makeConstraints {
+            $0.height.equalTo(buttonSize)
+            $0.width.equalTo(buttonSize)
         }
     }
-    
+
 }

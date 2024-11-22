@@ -38,6 +38,12 @@ struct Calculator {
                     currentDisplay.append((lastNum + str, type))
                 }
             } else {
+                // 0으로 나누려고 하는 경우에 입력이 안되도록 하기.
+                if last.1 == .divide && str == "0" {
+                    os_log(.debug, "0 안돼!")
+                    return
+                }
+                
                 currentDisplay.append((str, type))
             }
         case .add, .subtract, .multiply, .divide:
@@ -65,20 +71,31 @@ struct Calculator {
             self.clear()
             return
         }
-            
+        
+        // 추가 수식이 없거나 숫자가 한개 뿐일 경우(=arr.count < 3) 아무 동작없음.
+        if arr.count < 3 {
+            return
+        }
+        
         var idx: Int = 1
         
         // 곱셈과 나눗셈을 우선적으로 계산.
         while true {
             if arr[idx].1 == .multiply {
-                var tempResult: Int = MultiplyOperation().operationNumber(Int(arr[idx - 1].0)!, Int(arr[idx + 1].0)!)
+                let tempResult: Int = MultiplyOperation().operationNumber(Int(arr[idx - 1].0)!, Int(arr[idx + 1].0)!)
                 
                 arr[idx] = (String(tempResult), .number)
                 arr.remove(at: idx + 1)
                 arr.remove(at: idx - 1 )
                                 
             } else if arr[idx].1 == .divide {
-                var tempResult: Int = DivideOperation().operationNumber(Int(arr[idx - 1].0)!, Int(arr[idx + 1].0)!)
+                
+                guard Int(arr[idx + 1].0) != 0 else {
+                    self.clear()
+                    return
+                }
+                
+                let tempResult: Int = DivideOperation().operationNumber(Int(arr[idx - 1].0)!, Int(arr[idx + 1].0)!)
                 
                 arr[idx] = (String(tempResult), .number)
                 arr.remove(at: idx + 1)
@@ -94,6 +111,8 @@ struct Calculator {
         }
         
         
+        
+        
         // 최종 계산 결과를 담는 sum. 로직 실패로 첫 수가 숫자가 아닐 경우 초기화.
         guard var sum: Int = Int(arr[0].0) else {
             os_log(.debug, "\(arr)")
@@ -101,27 +120,34 @@ struct Calculator {
             return
         }
         
-        // 덧셈과 뺄셈은 순차적으로 진행
-        for i in 1...(arr.count / 2) {
-            // 만약 다음에 숫자가 아닐 경우 아묻따 초기화.
-            guard let nextNum: Int = Int(arr[2 * i].0) else {
-                os_log(.debug, "\(arr)")
-                self.clear()
-                return
+        if arr.count > 1 {
+            // 덧셈과 뺄셈은 순차적으로 진행
+            for i in 1...(arr.count / 2) {
+                // 만약 다음에 숫자가 아닐 경우 아묻따 초기화.
+                guard let nextNum: Int = Int(arr[2 * i].0) else {
+                    os_log(.debug, "\(arr)")
+                    self.clear()
+                    return
+                }
+                
+                if arr[2 * i - 1].1 == .add {
+                    sum += nextNum
+                } else {
+                    sum -= nextNum
+                }
             }
-            
-            if arr[2 * i - 1].1 == .add {
-                sum += nextNum
-            } else {
-                sum -= nextNum
-            }
+        
         }
         
-        // 이전 기록 조회 및 마지막 계산식을 결과값보다 위에 띄워주기
-        history.append( Task(currentDisplay.map{ $0.0 }.joined(), String(sum)) )
-        currentDisplay.removeAll()
-        currentDisplay.append((String(sum), .number)) // 마지막 결과값 남기기
+        saveResult(sum)
         
+    }
+    
+    mutating func saveResult(_ result: Int) {
+        // 이전 기록 조회 및 마지막 계산식을 결과값보다 위에 띄워주기
+        history.append( Task(currentDisplay.map{ $0.0 }.joined(separator: " "), String(result)) )
+        currentDisplay.removeAll()
+        currentDisplay.append((String(result), .number)) // 마지막 결과값 남기기
     }
     
     mutating func validateDisplay() -> [(String, CalButtonTypes)]? {
@@ -132,9 +158,10 @@ struct Calculator {
         var arr = currentDisplay
         
         // 연산기호 여부 확인용
-        var symbols: [CalButtonTypes] = [.add, .subtract, .multiply, .divide]
+        let symbols: [CalButtonTypes] = [.add, .subtract, .multiply, .divide]
         
         for i in 0..<arr.count {
+            //
             if (i + 1) % 2 == 0 {
                 // 짝수 항목은 항상 기호여야 한다.
                 guard symbols.contains(arr[i].1) else {
@@ -148,6 +175,12 @@ struct Calculator {
                     return nil
                 }
             }
+            
+            // 나누기 기호 다음 0이 있을 경우 에러
+            if arr[i].1 == .divide && arr[i + 1].0 == "0" {
+                os_log(.debug, "0으로 나눌 수 없어.")
+                return nil
+            }
         }
         
         // 마지막 항목이 기호일 경우 이를 제거
@@ -157,49 +190,4 @@ struct Calculator {
         
         return arr
     }
-    
-    
-    // 연산자 기호와 숫자를 받아 결과를 계산
-    // 인스턴스 내부에 result를 기록중이므로 연산 결과를 result에 저장하고 이를 반환함.
-    mutating func calculate(operator opText: String, firstNumber: Int?, secondNumber: Int) -> Int {
-        var result: Int = 0
-        
-        switch opText {
-        case "+":
-            if firstNumber != nil {
-                result =  AddOperation().operationNumber(firstNumber!, secondNumber)
-            } else {
-                result =  AddOperation().operationNumber(result, secondNumber)
-            }
-        case "-":
-            if firstNumber != nil {
-                result =  SubstractOperation().operationNumber(firstNumber!, secondNumber)
-            } else {
-                result =  SubstractOperation().operationNumber(result, secondNumber)
-            }
-        case "*":
-            if firstNumber != nil {
-                result =  MultiplyOperation().operationNumber(firstNumber!, secondNumber)
-            } else {
-                result =  MultiplyOperation().operationNumber(result, secondNumber)
-            }
-        case "/":
-            if firstNumber != nil {
-                result =  DivideOperation().operationNumber(firstNumber!, secondNumber)
-            } else {
-                result =  DivideOperation().operationNumber(result, secondNumber)
-            }
-        case "%":
-            if firstNumber != nil {
-                result =  ModulusOperation().operationNumber(firstNumber!, secondNumber)
-            } else {
-                result =  ModulusOperation().operationNumber(result, secondNumber)
-            }
-        default:
-            break
-        }
-        
-        return result
-    }
-    
 }

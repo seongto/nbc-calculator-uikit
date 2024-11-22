@@ -41,6 +41,7 @@ struct ThemeManager {
         let h1 = UIFont.systemFont(ofSize: 60, weight: .bold)
         let h2 = UIFont.systemFont(ofSize: 45, weight: .bold)
         let h3 = UIFont.systemFont(ofSize: 30, weight: .bold)
+        let h4 = UIFont.systemFont(ofSize: 20, weight: .bold)
         
         let p = UIFont.systemFont(ofSize: 16, weight: .regular)
         let strong = UIFont.systemFont(ofSize: 16, weight: .bold)

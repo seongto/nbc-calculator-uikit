@@ -10,7 +10,10 @@ import Foundation
 
 enum CalButtonTypes: String {
     case number
-    case mathSymbol
+    case add
+    case subtract
+    case multiply
+    case divide
     case clear
     case calculate
 }

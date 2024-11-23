@@ -10,71 +10,6 @@ import SnapKit
 import OSLog
 
 
-/// 버튼의 한 행을 스택뷰로 만들기
-func makeHorizontalStackView(_ buttons: [CalculatorButtonComponent]) -> UIStackView {
-    let stackView = UIStackView()
-    
-    stackView.axis = .horizontal
-    stackView.spacing = 10
-    stackView.distribution = .fillEqually
-    stackView.backgroundColor = ThemeManager.shared.colors.black
-        
-    buttons.forEach { stackView.addArrangedSubview($0) }
-    
-    stackView.snp.makeConstraints {
-        $0.height.equalTo(80)
-    }
-    
-    return stackView
-    
-}
-
-/// 현재 입력한 수식 및 결과값을 보여주는 레이블
-func makeDisplayLabel(_ text: String) -> UILabel {
-    let label = UILabel()
-    let theme = ThemeManager.shared
-    
-    label.text = text
-    label.backgroundColor = theme.colors.black
-    label.textColor = theme.colors.white
-    label.textAlignment = .right
-    label.font = theme.fonts.h1
-    label.adjustsFontSizeToFitWidth = true // 원하는 대로 작동하지 않는 코드...
-    label.minimumScaleFactor = 0.5
-    
-    label.snp.makeConstraints {
-        $0.height.equalTo(100)
-    }
-    
-    return label
-}
-
-/// 이전 계산된 수식과 에러 메시지 등을 보여주는 레이블
-func makeHistoryLabel() -> UILabel {
-    let label = UILabel()
-    let theme = ThemeManager.shared
-    
-    label.text = ""
-    label.backgroundColor = theme.colors.black
-    label.textColor = theme.colors.grey2
-    label.textAlignment = .right
-    label.font = theme.fonts.h4
-    
-    label.snp.makeConstraints {
-        $0.height.equalTo(40)
-    }
-    
-    return label
-}
-
-/// label의 스크롤을 위한 스크롤뷰
-func makeHorizontalScrollView() -> UIScrollView{
-    let scrollView = UIScrollView()
-    scrollView.showsHorizontalScrollIndicator = false
-    
-    return scrollView
-}
-
 /// 메인 UI 컴포넌트 배치 및 기본 작동 기능 구현
 class MainViewController: UIViewController {
     
@@ -83,36 +18,36 @@ class MainViewController: UIViewController {
     
     let mainWrapper = UIView()
     // 현재 계산 중인 수식 및 그 결과를 보여주는 레이어
-    let displayLabel = makeDisplayLabel("0")
-    let displayScrollView = makeHorizontalScrollView()
+    let displayLabel = UILabel.makeDisplayLabel("0")
+    let displayScrollView = UIScrollView.makeHorizontalScrollView()
     
     // 현재 계산 중인 수식 및 그 결과를 보여주는 레이어
-    let historyLabel = makeHistoryLabel()
-    let historyScrollView = makeHorizontalScrollView()
+    let historyLabel = UILabel.makeHistoryLabel()
+    let historyScrollView = UIScrollView.makeHorizontalScrollView()
     
     
     let buttonsStackView = UIStackView() // 각 계산기 버튼 row 스택뷰들을 모아서 담는 스택뷰
     
     // 각 행에 접근할 경우를 대비해 각각을 따로 변수로 만들어서 사용.
-    let buttonsRowStackView1: UIStackView = makeHorizontalStackView([
+    let buttonsRowStackView1: UIStackView = UIStackView.makeHorizontalStackView([
         CalculatorButtonComponent(title: "7", type: .number),
         CalculatorButtonComponent(title: "8", type: .number),
         CalculatorButtonComponent(title: "9", type: .number),
         CalculatorButtonComponent(title: "+", type: .add),
     ])
-    let buttonsRowStackView2: UIStackView = makeHorizontalStackView([
+    let buttonsRowStackView2: UIStackView = UIStackView.makeHorizontalStackView([
         CalculatorButtonComponent(title: "4", type: .number),
         CalculatorButtonComponent(title: "5", type: .number),
         CalculatorButtonComponent(title: "6", type: .number),
         CalculatorButtonComponent(title: "-", type: .subtract),
     ])
-    let buttonsRowStackView3: UIStackView = makeHorizontalStackView([
+    let buttonsRowStackView3: UIStackView = UIStackView.makeHorizontalStackView([
         CalculatorButtonComponent(title: "1", type: .number),
         CalculatorButtonComponent(title: "2", type: .number),
         CalculatorButtonComponent(title: "3", type: .number),
         CalculatorButtonComponent(title: "x", type: .multiply),
     ])
-    let buttonsRowStackView4: UIStackView = makeHorizontalStackView([
+    let buttonsRowStackView4: UIStackView = UIStackView.makeHorizontalStackView([
         CalculatorButtonComponent(title: "AC", type: .clear),
         CalculatorButtonComponent(title: "0", type: .number),
         CalculatorButtonComponent(title: "=", type: .calculate),

@@ -11,7 +11,7 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     // 전역데이터 관리를 위한 글로벌 스토어
-    var globalStore: [ String:Any ] = [:]
+    var globalStore: [ String : Any ] = [:]
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
